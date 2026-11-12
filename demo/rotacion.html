@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pulso Tablero de Rotación</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+/* Layout: tablero de una columna (1120px); resumen arriba, luego "¿qué pasó?", "¿dónde?", "¿quién sigue?" y simulador */
+:root{
+  --bg:#F4F7F6; --surface:#FFFFFF; --ink:#0D2B2A; --muted:#4E6866; --line:#D6E2DF;
+  --deep:#0D3B38; --deep-fg:#E8F3F1; --pulse:#F2A93B; --pulse-ink:#8A5A0B;
+  --s1:#1F6F68; --s2:#9CC9C2; --hi:#D9822B; --med:#C9A227; --low:#3E9C74;
+  --f-display:"Bricolage Grotesque","Avenir Next","Segoe UI",system-ui,sans-serif;
+  --f-body:"Inter","Segoe UI",system-ui,-apple-system,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0A1716; --surface:#10221F; --ink:#E4EFEC; --muted:#93AEA9; --line:#1F3A36;
+  --deep:#13332F; --deep-fg:#E4EFEC; --pulse:#F5B754; --pulse-ink:#F5B754;
+  --s1:#5CB8AD; --s2:#2C5A54; --hi:#F09A4A; --med:#DDBB45; --low:#4CC492; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0A1716; --surface:#10221F; --ink:#E4EFEC; --muted:#93AEA9; --line:#1F3A36;
+  --deep:#13332F; --deep-fg:#E4EFEC; --pulse:#F5B754; --pulse-ink:#F5B754;
+  --s1:#5CB8AD; --s2:#2C5A54; --hi:#F09A4A; --med:#DDBB45; --low:#4CC492; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--f-display);margin:0;line-height:1.1;text-wrap:balance;letter-spacing:-.01em}
+p{margin:0}
+:focus-visible{outline:2px solid var(--pulse);outline-offset:2px;border-radius:4px}
+.eyebrow{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding-block:18px;border-bottom:1px solid var(--line)}
+.back{text-decoration:none;color:var(--muted);font-size:.9rem}
+.back b{font-family:var(--f-display);color:var(--ink)}
+.demo-badge{font-family:var(--f-mono);font-size:.72rem;padding:5px 10px;border-radius:999px;background:color-mix(in srgb,var(--pulse) 22%,transparent);color:var(--pulse-ink)}
+.head{padding-block:36px 24px;display:grid;gap:10px}
+.head h1{font-size:clamp(2rem,4.5vw,3rem);font-weight:800}
+.head p{color:var(--muted);max-width:68ch}
+
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media (max-width:860px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;min-width:0}
+.kpi.lead{background:var(--deep);color:var(--deep-fg);border-color:var(--deep)}
+.kpi small{display:block;font-size:.8rem;color:inherit;opacity:.75}
+.kpi .v{font-family:var(--f-display);font-weight:800;font-size:clamp(1.6rem,3.2vw,2.2rem);margin-top:6px;font-variant-numeric:tabular-nums}
+.kpi .d{font-size:.78rem;opacity:.7;margin-top:2px}
+
+section{padding-block:40px;border-bottom:1px solid var(--line)}
+.sh{display:grid;gap:6px;margin-bottom:20px}
+.sh h2{font-size:1.6rem}
+.insight{display:flex;gap:10px;align-items:flex-start;margin-top:8px;color:var(--ink);font-size:.95rem;max-width:72ch}
+.insight::before{content:"";flex:none;width:10px;height:10px;margin-top:.45em;border-radius:50%;background:var(--pulse)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid2 > *{min-width:0}
+@media (max-width:860px){.grid2{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px}
+.panel h3{font-size:1rem;margin-bottom:12px}
+.chart{position:relative;height:260px}
+
+.dist{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px}
+.chip{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:.88rem;background:var(--surface)}
+.chip i{width:10px;height:10px;border-radius:50%}
+.chip b{font-variant-numeric:tabular-nums}
+.filters{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
+select{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px}
+label.f{font-size:.85rem;color:var(--muted);display:flex;align-items:center;gap:8px}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+table{width:100%;border-collapse:collapse;font-size:.9rem;min-width:640px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line)}
+th{font-family:var(--f-mono);font-weight:500;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+tr:last-child td{border-bottom:0}
+td.num{font-variant-numeric:tabular-nums}
+.bar{display:flex;align-items:center;gap:8px}
+.bar .track{display:block;height:6px;border-radius:3px;background:var(--line);width:70px;overflow:hidden}
+.bar .track i{display:block;height:100%}
+.pill{font-size:.75rem;font-weight:600;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.pill.Alto{background:color-mix(in srgb,var(--hi) 22%,transparent);color:var(--hi)}
+.pill.Medio{background:color-mix(in srgb,var(--med) 22%,transparent);color:var(--med)}
+.pill.Bajo{background:color-mix(in srgb,var(--low) 22%,transparent);color:var(--low)}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tags span{font-size:.75rem;border:1px solid var(--line);border-radius:6px;padding:2px 7px;color:var(--muted)}
+.ethic{margin-top:14px;font-size:.85rem;color:var(--muted);max-width:80ch}
+
+.sim{background:var(--deep);color:var(--deep-fg);border-radius:18px;padding:28px;display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:center}
+.sim > *{min-width:0}
+@media (max-width:760px){.sim{grid-template-columns:1fr}}
+.sim h2{font-size:1.6rem}
+.sim p{opacity:.8;margin-top:8px}
+input[type=range]{width:100%;accent-color:var(--pulse)}
+.save{font-family:var(--f-display);font-weight:800;font-size:clamp(2rem,4vw,2.8rem);font-variant-numeric:tabular-nums}
+.foot{padding-block:28px;color:var(--muted);font-size:.82rem}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="top">
+    <a class="back" href="../index.html">← <b>Pulso</b> · Luis Felipe</a>
+    <span class="demo-badge">Demo con datos ficticios</span>
+  </div>
+
+  <div class="head">
+    <p class="eyebrow" id="periodo"></p>
+    <h1>Tablero de rotación</h1>
+    <p id="empresa-desc"></p>
+  </div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <section>
+    <div class="sh"><p class="eyebrow">¿Qué pasó?</p><h2>Bajas en los últimos 12 meses</h2>
+      <p class="insight" id="ins-mes"></p></div>
+    <div class="grid2">
+      <div class="panel"><h3>Bajas por mes</h3><div class="chart"><canvas id="c-mes" aria-label="Bajas por mes"></canvas></div></div>
+      <div class="panel"><h3>Motivo de salida</h3><div class="chart"><canvas id="c-mot" aria-label="Motivos de salida"></canvas></div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sh"><p class="eyebrow">¿Dónde?</p><h2>Rotación por área y antigüedad</h2>
+      <p class="insight" id="ins-area"></p><p class="insight" id="ins-ant"></p></div>
+    <div class="grid2">
+      <div class="panel"><h3>Rotación anual por área</h3><div class="chart"><canvas id="c-area" aria-label="Rotación por área"></canvas></div></div>
+      <div class="panel"><h3>Bajas según antigüedad al salir</h3><div class="chart"><canvas id="c-ant" aria-label="Bajas por antigüedad"></canvas></div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sh"><p class="eyebrow">¿Quién sigue? · Modelo predictivo</p><h2>Riesgo de salida de la plantilla actual</h2>
+      <p class="insight" id="ins-modelo"></p></div>
+    <div class="dist" id="dist"></div>
+    <div class="grid2" style="margin-bottom:16px">
+      <div class="panel"><h3>Qué factores aumentan el riesgo</h3><div class="chart"><canvas id="c-imp" aria-label="Importancia de factores"></canvas></div></div>
+      <div class="panel" style="display:flex;flex-direction:column;gap:10px">
+        <h3>Cómo leer este modelo</h3>
+        <p style="color:var(--muted);font-size:.92rem">El modelo aprendió de las personas que se fueron y las que se quedaron, y estima la probabilidad de que cada colaborador actual se vaya en los próximos meses.</p>
+        <p style="color:var(--muted);font-size:.92rem">Para cada persona muestra los dos factores que más pesan en su caso. Así RH sabe con quién hablar primero y de qué.</p>
+        <p style="color:var(--muted);font-size:.92rem" id="auc-text"></p>
+      </div>
+    </div>
+    <div class="filters">
+      <label class="f" for="f-area">Área <select id="f-area"><option value="">Todas</option></select></label>
+      <label class="f" for="f-nivel">Nivel <select id="f-nivel"><option value="">Todos</option><option>Alto</option><option>Medio</option><option>Bajo</option></select></label>
+      <span class="f" id="f-count"></span>
+    </div>
+    <div class="tbl"><table>
+      <thead><tr><th>Colaborador</th><th>Área</th><th>Sede</th><th>Antigüedad</th><th>Riesgo</th><th>Principales factores</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table></div>
+    <p class="ethic">Este análisis sirve para retener talento: conversaciones, ajustes de sueldo, planes de carrera. No debe usarse para sancionar ni despedir. Con datos reales se maneja con aviso de privacidad y acceso restringido.</p>
+  </section>
+
+  <section style="border-bottom:0">
+    <div class="sim">
+      <div>
+        <p class="eyebrow" style="color:var(--deep-fg);opacity:.6">Simulador</p>
+        <h2 style="margin-top:8px">¿Cuánto ahorrarías si bajas la rotación?</h2>
+        <p id="sim-base"></p>
+      </div>
+      <div>
+        <label for="sim" style="font-size:.9rem;opacity:.85">Reducir la rotación en <b id="sim-pts">5</b> puntos porcentuales</label>
+        <input id="sim" type="range" min="1" max="15" step="1" value="5">
+        <div class="save" id="sim-save"></div>
+        <p style="margin-top:0" id="sim-det"></p>
+      </div>
+    </div>
+  </section>
+
+  <p class="foot">Pulso · por Luis Felipe. Empresa y personas ficticias generadas para demostración. Costo de rotación estimado como <span id="sup"></span> meses de sueldo por baja (reclutamiento, capacitación y productividad perdida).</p>
+</div>
+
+<script>
+const D = {"empresa": "Comercializadora del Valle (empresa ficticia)", "periodo": "nov 2025 – oct 2026", "kpis": {"plantilla_activa": 475, "bajas_12m": 145, "rotacion": 0.305, "costo_rotacion": 6069300, "supuesto_costo_meses": 3, "ausencias_prom": 4.6, "bajas_menos_1año": 0.352, "en_riesgo_alto": 53}, "mensual": [{"mes": "2025-11", "bajas": 7}, {"mes": "2025-12", "bajas": 7}, {"mes": "2026-01", "bajas": 23}, {"mes": "2026-02", "bajas": 17}, {"mes": "2026-03", "bajas": 13}, {"mes": "2026-04", "bajas": 7}, {"mes": "2026-05", "bajas": 12}, {"mes": "2026-06", "bajas": 10}, {"mes": "2026-07", "bajas": 11}, {"mes": "2026-08", "bajas": 11}, {"mes": "2026-09", "bajas": 9}, {"mes": "2026-10", "bajas": 18}], "por_area": [{"area": "Almacén", "plantilla": 124, "bajas": 51, "rotacion": 0.411, "costo": 1843200, "ausencias": 4.8, "clima": 3.63}, {"area": "Ventas", "plantilla": 108, "bajas": 32, "rotacion": 0.296, "costo": 1502400, "ausencias": 4.2, "clima": 3.79}, {"area": "Atención a clientes", "plantilla": 106, "bajas": 18, "rotacion": 0.17, "costo": 723900, "ausencias": 4.5, "clima": 3.61}, {"area": "Operaciones", "plantilla": 88, "bajas": 38, "rotacion": 0.432, "costo": 1647000, "ausencias": 4.9, "clima": 3.55}, {"area": "Administración", "plantilla": 49, "bajas": 6, "rotacion": 0.122, "costo": 352800, "ausencias": 4.6, "clima": 3.53}], "por_antiguedad": [{"rango": "0–3 meses", "bajas": 4}, {"rango": "3–6 meses", "bajas": 12}, {"rango": "6–12 meses", "bajas": 35}, {"rango": "1–2 años", "bajas": 53}, {"rango": "2–5 años", "bajas": 40}, {"rango": "5+ años", "bajas": 1}], "motivos": [{"motivo": "Distancia / traslado", "bajas": 39}, {"motivo": "Horarios y carga", "bajas": 34}, {"motivo": "Relación con jefe", "bajas": 23}, {"motivo": "Mejor sueldo", "bajas": 19}, {"motivo": "Motivos personales", "bajas": 18}, {"motivo": "Desarrollo / crecimiento", "bajas": 12}], "modelo": {"tipo": "Regresión logística", "auc": 0.79, "n_entrenamiento": 620, "importancia": [{"factor": "Poca antigüedad", "peso": 0.64}, {"factor": "Clima laboral bajo", "peso": 0.46}, {"factor": "Tiempo sin aumento", "peso": 0.4}, {"factor": "Sueldo bajo vs mercado", "peso": 0.31}, {"factor": "Muchas horas extra", "peso": 0.3}, {"factor": "Edad", "peso": 0.26}, {"factor": "Ausencias frecuentes", "peso": 0.24}, {"factor": "Traslado largo", "peso": 0.07}]}, "riesgo": [{"id": "E1339", "nombre": "Carlos Flores", "area": "Almacén", "sede": "CDMX", "antiguedad": 17, "riesgo": 0.79, "nivel": "Alto", "factores": ["Clima laboral bajo", "Edad"]}, {"id": "E1318", "nombre": "Jorge Hernández", "area": "Almacén", "sede": "CDMX", "antiguedad": 9, "riesgo": 0.76, "nivel": "Alto", "factores": ["Poca antigüedad", "Tiempo sin aumento"]}, {"id": "E1489", "nombre": "Karla Ruiz", "area": "Operaciones", "sede": "CDMX", "antiguedad": 9, "riesgo": 0.76, "nivel": "Alto", "factores": ["Clima laboral bajo", "Poca antigüedad"]}, {"id": "E1387", "nombre": "Daniela Torres", "area": "Operaciones", "sede": "CDMX", "antiguedad": 22, "riesgo": 0.75, "nivel": "Alto", "factores": ["Muchas horas extra", "Clima laboral bajo"]}, {"id": "E1491", "nombre": "Gabriela Reyes", "area": "Almacén", "sede": "Querétaro", "antiguedad": 10, "riesgo": 0.74, "nivel": "Alto", "factores": ["Clima laboral bajo", "Ausencias frecuentes"]}, {"id": "E1533", "nombre": "Paola Ruiz", "area": "Operaciones", "sede": "Monterrey", "antiguedad": 19, "riesgo": 0.7, "nivel": "Alto", "factores": ["Muchas horas extra", "Sueldo bajo vs mercado"]}, {"id": "E1479", "nombre": "Ana González", "area": "Almacén", "sede": "CDMX", "antiguedad": 19, "riesgo": 0.69, "nivel": "Alto", "factores": ["Clima laboral bajo", "Edad"]}, {"id": "E1528", "nombre": "Valeria Ramírez", "area": "Almacén", "sede": "CDMX", "antiguedad": 6, "riesgo": 0.66, "nivel": "Alto", "factores": ["Muchas horas extra", "Sueldo bajo vs mercado"]}, {"id": "E1013", "nombre": "Fernanda Rodríguez", "area": "Ventas", "sede": "CDMX", "antiguedad": 25, "riesgo": 0.63, "nivel": "Alto", "factores": ["Tiempo sin aumento", "Clima laboral bajo"]}, {"id": "E1035", "nombre": "Óscar Pérez", "area": "Almacén", "sede": "Monterrey", "antiguedad": 8, "riesgo": 0.63, "nivel": "Alto", "factores": ["Tiempo sin aumento", "Poca antigüedad"]}, {"id": "E1046", "nombre": "María Ruiz", "area": "Almacén", "sede": "Querétaro", "antiguedad": 15, "riesgo": 0.6, "nivel": "Alto", "factores": ["Muchas horas extra", "Tiempo sin aumento"]}, {"id": "E1143", "nombre": "Alejandro Reyes", "area": "Operaciones", "sede": "CDMX", "antiguedad": 3, "riesgo": 0.59, "nivel": "Alto", "factores": ["Poca antigüedad", "Muchas horas extra"]}, {"id": "E1163", "nombre": "María García", "area": "Almacén", "sede": "Monterrey", "antiguedad": 7, "riesgo": 0.59, "nivel": "Alto", "factores": ["Muchas horas extra", "Poca antigüedad"]}, {"id": "E1146", "nombre": "Luis Ruiz", "area": "Almacén", "sede": "CDMX", "antiguedad": 4, "riesgo": 0.58, "nivel": "Alto", "factores": ["Poca antigüedad", "Clima laboral bajo"]}, {"id": "E1388", "nombre": "Paola Morales", "area": "Operaciones", "sede": "CDMX", "antiguedad": 6, "riesgo": 0.57, "nivel": "Alto", "factores": ["Poca antigüedad", "Ausencias frecuentes"]}, {"id": "E1595", "nombre": "Óscar Torres", "area": "Ventas", "sede": "Querétaro", "antiguedad": 6, "riesgo": 0.56, "nivel": "Alto", "factores": ["Poca antigüedad", "Clima laboral bajo"]}, {"id": "E1396", "nombre": "Ana Reyes", "area": "Operaciones", "sede": "Querétaro", "antiguedad": 8, "riesgo": 0.56, "nivel": "Alto", "factores": ["Poca antigüedad", "Clima laboral bajo"]}, {"id": "E1265", "nombre": "Miguel Morales", "area": "Almacén", "sede": "CDMX", "antiguedad": 4, "riesgo": 0.55, "nivel": "Alto", "factores": ["Clima laboral bajo", "Poca antigüedad"]}, {"id": "E1603", "nombre": "Lucía Ruiz", "area": "Almacén", "sede": "Monterrey", "antiguedad": 7, "riesgo": 0.53, "nivel": "Alto", "factores": ["Poca antigüedad", "Clima laboral bajo"]}, {"id": "E1170", "nombre": "Karla García", "area": "Ventas", "sede": "Monterrey", "antiguedad": 17, "riesgo": 0.5, "nivel": "Alto", "factores": ["Clima laboral bajo", "Sueldo bajo vs mercado"]}, {"id": "E1530", "nombre": "Valeria Ramírez", "area": "Almacén", "sede": "CDMX", "antiguedad": 14, "riesgo": 0.5, "nivel": "Alto", "factores": ["Muchas horas extra", "Poca antigüedad"]}, {"id": "E1032", "nombre": "Alejandro Ruiz", "area": "Almacén", "sede": "Querétaro", "antiguedad": 20, "riesgo": 0.49, "nivel": "Alto", "factores": ["Ausencias frecuentes", "Clima laboral bajo"]}, {"id": "E1439", "nombre": "Daniela Vargas", "area": "Almacén", "sede": "Querétaro", "antiguedad": 23, "riesgo": 0.49, "nivel": "Alto", "factores": ["Tiempo sin aumento", "Clima laboral bajo"]}, {"id": "E1112", "nombre": "Óscar Ruiz", "area": "Almacén", "sede": "Monterrey", "antiguedad": 4, "riesgo": 0.49, "nivel": "Alto", "factores": ["Poca antigüedad", "Sueldo bajo vs mercado"]}, {"id": "E1458", "nombre": "Karla Pérez", "area": "Operaciones", "sede": "CDMX", "antiguedad": 5, "riesgo": 0.48, "nivel": "Alto", "factores": ["Tiempo sin aumento", "Poca antigüedad"]}, {"id": "E1241", "nombre": "Ricardo Martínez", "area": "Almacén", "sede": "Querétaro", "antiguedad": 8, "riesgo": 0.47, "nivel": "Alto", "factores": ["Poca antigüedad", "Clima laboral bajo"]}, {"id": "E1360", "nombre": "José Vargas", "area": "Almacén", "sede": "CDMX", "antiguedad": 16, "riesgo": 0.47, "nivel": "Alto", "factores": ["Muchas horas extra", "Sueldo bajo vs mercado"]}, {"id": "E1393", "nombre": "Daniela López", "area": "Operaciones", "sede": "CDMX", "antiguedad": 5, "riesgo": 0.47, "nivel": "Alto", "factores": ["Poca antigüedad", "Clima laboral bajo"]}, {"id": "E1005", "nombre": "Valeria Hernández", "area": "Operaciones", "sede": "CDMX", "antiguedad": 21, "riesgo": 0.47, "nivel": "Alto", "factores": ["Muchas horas extra", "Clima laboral bajo"]}, {"id": "E1023", "nombre": "Ana Flores", "area": "Almacén", "sede": "Querétaro", "antiguedad": 10, "riesgo": 0.47, "nivel": "Alto", "factores": ["Tiempo sin aumento", "Poca antigüedad"]}, {"id": "E1575", "nombre": "Valeria Castillo", "area": "Almacén", "sede": "Querétaro", "antiguedad": 6, "riesgo": 0.47, "nivel": "Alto", "factores": ["Poca antigüedad", "Clima laboral bajo"]}, {"id": "E1206", "nombre": "Alejandro Pérez", "area": "Operaciones", "sede": "CDMX", "antiguedad": 22, "riesgo": 0.46, "nivel": "Alto", "factores": ["Muchas horas extra", "Clima laboral bajo"]}, {"id": "E1024", "nombre": "Luis Hernández", "area": "Almacén", "sede": "CDMX", "antiguedad": 26, "riesgo": 0.46, "nivel": "Alto", "factores": ["Sueldo bajo vs mercado", "Muchas horas extra"]}, {"id": "E1222", "nombre": "Jorge Morales", "area": "Atención a clientes", "sede": "Querétaro", "antiguedad": 10, "riesgo": 0.45, "nivel": "Alto", "factores": ["Clima laboral bajo", "Sueldo bajo vs mercado"]}, {"id": "E1299", "nombre": "Paola Flores", "area": "Ventas", "sede": "Monterrey", "antiguedad": 26, "riesgo": 0.45, "nivel": "Alto", "factores": ["Clima laboral bajo", "Tiempo sin aumento"]}, {"id": "E1381", "nombre": "María Torres", "area": "Ventas", "sede": "Monterrey", "antiguedad": 23, "riesgo": 0.45, "nivel": "Alto", "factores": ["Clima laboral bajo", "Ausencias frecuentes"]}, {"id": "E1512", "nombre": "José López", "area": "Almacén", "sede": "Querétaro", "antiguedad": 35, "riesgo": 0.44, "nivel": "Alto", "factores": ["Sueldo bajo vs mercado", "Muchas horas extra"]}, {"id": "E1041", "nombre": "Alejandro Jiménez", "area": "Operaciones", "sede": "CDMX", "antiguedad": 19, "riesgo": 0.44, "nivel": "Alto", "factores": ["Ausencias frecuentes", "Clima laboral bajo"]}, {"id": "E1029", "nombre": "Jorge Morales", "area": "Ventas", "sede": "Monterrey", "antiguedad": 58, "riesgo": 0.44, "nivel": "Alto", "factores": ["Tiempo sin aumento", "Ausencias frecuentes"]}, {"id": "E1391", "nombre": "Gabriela Cruz", "area": "Operaciones", "sede": "CDMX", "antiguedad": 19, "riesgo": 0.44, "nivel": "Alto", "factores": ["Clima laboral bajo", "Edad"]}], "distribucion_riesgo": {"alto": 53, "medio": 126, "bajo": 296}};
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const mxn = n => '$' + (n>=1e6 ? (n/1e6).toFixed(1)+' M' : Math.round(n/1000)+' mil') + ' MXN';
+const pct = n => (n*100).toFixed(1).replace('.0','') + '%';
+const K = D.kpis;
+const MES = {"01":"ene","02":"feb","03":"mar","04":"abr","05":"may","06":"jun","07":"jul","08":"ago","09":"sep","10":"oct","11":"nov","12":"dic"};
+
+document.getElementById('periodo').textContent = 'Periodo: ' + D.periodo;
+document.getElementById('empresa-desc').textContent = D.empresa.replace(' (empresa ficticia)','') + ' es una distribuidora ficticia con ' + K.plantilla_activa + ' colaboradores en CDMX, Querétaro y Monterrey. Este tablero responde tres preguntas: qué pasó, dónde se concentra y quién podría irse después.';
+
+document.getElementById('kpis').innerHTML = [
+  ['lead','Rotación anual',pct(K.rotacion),K.bajas_12m+' bajas en 12 meses'],
+  ['','Costo estimado',mxn(K.costo_rotacion),'Supuesto: '+K.supuesto_costo_meses+' meses de sueldo por baja'],
+  ['','Salidas antes del año',pct(K.bajas_menos_1año),'de todas las bajas'],
+  ['','En riesgo alto hoy',K.en_riesgo_alto,'colaboradores según el modelo']
+].map(k=>`<div class="kpi ${k[0]}"><small>${k[1]}</small><div class="v">${k[2]}</div><div class="d">${k[3]}</div></div>`).join('');
+
+const m = D.mensual, maxM = m.reduce((a,b)=>b.bajas>a.bajas?b:a);
+document.getElementById('ins-mes').textContent = `El pico fue en ${MES[maxM.mes.slice(5)]} ${maxM.mes.slice(0,4)} con ${maxM.bajas} bajas, típico después del aguinaldo. Conviene reforzar la retención en diciembre.`;
+const ar = [...D.por_area].sort((a,b)=>b.rotacion-a.rotacion);
+const top2 = ar.slice(0,2), share = (top2[0].bajas+top2[1].bajas)/K.bajas_12m;
+document.getElementById('ins-area').textContent = `${top2[0].area} y ${top2[1].area} concentran el ${pct(share)} de las bajas y ${mxn(top2[0].costo+top2[1].costo)} del costo.`;
+document.getElementById('ins-ant').textContent = `1 de cada 3 personas que se van lo hace antes de cumplir un año: el problema empieza en el reclutamiento y la integración.`;
+document.getElementById('ins-modelo').textContent = `${D.distribucion_riesgo.alto} personas tienen riesgo alto. Atenderlas a tiempo cuesta mucho menos que reemplazarlas.`;
+document.getElementById('auc-text').textContent = `Precisión del modelo (AUC): ${D.modelo.auc} en datos que no vio al entrenar. Por arriba de 0.75 se considera útil para priorizar.`;
+document.getElementById('sup').textContent = K.supuesto_costo_meses;
+
+const dr = D.distribucion_riesgo;
+document.getElementById('dist').innerHTML = [['Alto',dr.alto,'--hi'],['Medio',dr.medio,'--med'],['Bajo',dr.bajo,'--low']]
+  .map(d=>`<span class="chip"><i style="background:var(${d[2]})"></i>Riesgo ${d[0].toLowerCase()} <b>${d[1]}</b></span>`).join('');
+
+/* Tabla */
+const fa = document.getElementById('f-area'), fn = document.getElementById('f-nivel');
+D.por_area.forEach(a=>fa.insertAdjacentHTML('beforeend',`<option>${a.area}</option>`));
+const color = {Alto:'--hi',Medio:'--med',Bajo:'--low'};
+const ant = mths => mths<12 ? mths+' meses' : (mths/12).toFixed(1).replace('.0','')+' años';
+function render(){
+  const rows = D.riesgo.filter(r=>(!fa.value||r.area===fa.value)&&(!fn.value||r.nivel===fn.value));
+  document.getElementById('f-count').textContent = rows.length + ' de las ' + D.riesgo.length + ' personas con mayor riesgo';
+  document.getElementById('tbody').innerHTML = rows.length ? rows.map(r=>`<tr>
+    <td>${r.nombre}<br><small style="color:var(--muted)">${r.id}</small></td><td>${r.area}</td><td>${r.sede}</td><td class="num">${ant(r.antiguedad)}</td>
+    <td><div class="bar"><span class="track"><i style="width:${Math.round(r.riesgo*100)}%;background:var(${color[r.nivel]})"></i></span><b class="num">${Math.round(r.riesgo*100)}%</b><span class="pill ${r.nivel}">${r.nivel}</span></div></td>
+    <td><div class="tags">${r.factores.map(f=>`<span>${f}</span>`).join('')}</div></td></tr>`).join('')
+    : `<tr><td colspan="6" style="color:var(--muted)">Nadie con ese filtro entre las personas de mayor riesgo.</td></tr>`;
+}
+fa.addEventListener('change',render); fn.addEventListener('change',render); render();
+
+/* Simulador */
+const costoBaja = K.costo_rotacion / K.bajas_12m;
+document.getElementById('sim-base').textContent = `Hoy cada baja cuesta en promedio ${mxn(costoBaja)}. Mueve la barra para ver el impacto de un programa de retención.`;
+const sim = document.getElementById('sim');
+function upd(){
+  const pts = +sim.value, menos = Math.round(K.plantilla_activa*pts/100);
+  document.getElementById('sim-pts').textContent = pts;
+  document.getElementById('sim-save').textContent = mxn(menos*costoBaja) + ' al año';
+  document.getElementById('sim-det').textContent = `${menos} bajas menos al año (rotación de ${pct(K.rotacion)} a ${pct(Math.max(0,K.rotacion-pts/100))}).`;
+}
+sim.addEventListener('input',upd); upd();
+
+/* Gráficas */
+let charts=[];
+function draw(){
+  charts.forEach(c=>c.destroy()); charts=[];
+  if(!window.Chart) return;
+  const ink=css('--muted'), grid=css('--line'), s1=css('--s1'), s2=css('--s2'), hi=css('--pulse');
+  Chart.defaults.font.family = css('--f-body'); Chart.defaults.color = ink;
+  const base = {responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},animation:matchMedia('(prefers-reduced-motion: reduce)').matches?false:{duration:600}};
+  const ax = (o={}) => Object.assign({grid:{color:grid},border:{display:false},ticks:{color:ink}},o);
+  charts.push(new Chart(document.getElementById('c-mes'),{type:'bar',data:{labels:m.map(x=>MES[x.mes.slice(5)]+' '+x.mes.slice(2,4)),
+    datasets:[{data:m.map(x=>x.bajas),backgroundColor:m.map(x=>x===maxM?hi:s1),borderRadius:4}]},
+    options:{...base,scales:{x:ax({grid:{display:false}}),y:ax({beginAtZero:true,ticks:{color:ink,precision:0}})}}}));
+  charts.push(new Chart(document.getElementById('c-mot'),{type:'bar',data:{labels:D.motivos.map(x=>x.motivo),
+    datasets:[{data:D.motivos.map(x=>x.bajas),backgroundColor:D.motivos.map((x,i)=>i===0?hi:s1),borderRadius:4}]},
+    options:{...base,indexAxis:'y',scales:{x:ax({beginAtZero:true,ticks:{color:ink,precision:0}}),y:ax({grid:{display:false}})}}}));
+  charts.push(new Chart(document.getElementById('c-area'),{type:'bar',data:{labels:ar.map(a=>a.area),
+    datasets:[{data:ar.map(a=>+(a.rotacion*100).toFixed(1)),backgroundColor:ar.map((a,i)=>i<2?hi:s1),borderRadius:4}]},
+    options:{...base,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw}% · ${ar[c.dataIndex].bajas} bajas · ${mxn(ar[c.dataIndex].costo)}`}}},
+      scales:{x:ax({beginAtZero:true,ticks:{color:ink,callback:v=>v+'%'}}),y:ax({grid:{display:false}})}}}));
+  charts.push(new Chart(document.getElementById('c-ant'),{type:'bar',data:{labels:D.por_antiguedad.map(x=>x.rango),
+    datasets:[{data:D.por_antiguedad.map(x=>x.bajas),backgroundColor:D.por_antiguedad.map((x,i)=>i<3?hi:s2),borderRadius:4}]},
+    options:{...base,scales:{x:ax({grid:{display:false}}),y:ax({beginAtZero:true,ticks:{color:ink,precision:0}})}}}));
+  const imp=D.modelo.importancia.filter(x=>x.peso>0.05);
+  charts.push(new Chart(document.getElementById('c-imp'),{type:'bar',data:{labels:imp.map(x=>x.factor),
+    datasets:[{data:imp.map(x=>x.peso),backgroundColor:imp.map((x,i)=>i<3?hi:s1),borderRadius:4}]},
+    options:{...base,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' Peso relativo: '+c.raw}}},
+      scales:{x:ax({beginAtZero:true,ticks:{display:false}}),y:ax({grid:{display:false}})}}}));
+}
+draw();
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);
+new MutationObserver(draw).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+</script>
+</body>
+</html>
