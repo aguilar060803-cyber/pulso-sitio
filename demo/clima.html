@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pulso Clima Laboral</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: app de una columna (1120px) con pestañas: Resumen (mapa de calor), Análisis con IA, Casos (tablero + expediente), Mi equipo (vista del jefe) */
+:root{
+  --bg:#F4F7F6; --surface:#FFFFFF; --ink:#0D2B2A; --muted:#4E6866; --line:#D6E2DF;
+  --deep:#0D3B38; --deep-fg:#E8F3F1; --pulse:#F2A93B; --pulse-ink:#8A5A0B;
+  --good:#2F8F6B; --mid:#D9B530; --bad:#C8443A; --cool:#1F6F68;
+  --f-display:"Bricolage Grotesque","Avenir Next","Segoe UI",system-ui,sans-serif;
+  --f-body:"Inter","Segoe UI",system-ui,-apple-system,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0A1716; --surface:#10221F; --ink:#E4EFEC; --muted:#93AEA9; --line:#1F3A36;
+  --deep:#13332F; --deep-fg:#E4EFEC; --pulse:#F5B754; --pulse-ink:#F5B754;
+  --good:#4CC492; --mid:#DDBB45; --bad:#E2675C; --cool:#5CB8AD; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0A1716; --surface:#10221F; --ink:#E4EFEC; --muted:#93AEA9; --line:#1F3A36;
+  --deep:#13332F; --deep-fg:#E4EFEC; --pulse:#F5B754; --pulse-ink:#F5B754;
+  --good:#4CC492; --mid:#DDBB45; --bad:#E2675C; --cool:#5CB8AD; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--f-display);margin:0;line-height:1.1;text-wrap:balance}
+p{margin:0}
+:focus-visible{outline:2px solid var(--pulse);outline-offset:2px;border-radius:4px}
+.eyebrow{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding-block:18px;border-bottom:1px solid var(--line)}
+.back{text-decoration:none;color:var(--muted);font-size:.9rem}
+.back b{font-family:var(--f-display);color:var(--ink)}
+.badge{font-family:var(--f-mono);font-size:.72rem;padding:5px 10px;border-radius:999px;background:color-mix(in srgb,var(--pulse) 22%,transparent);color:var(--pulse-ink)}
+.head{padding-block:32px 18px;display:grid;gap:10px}
+.head h1{font-size:clamp(2rem,4.5vw,3rem);font-weight:800}
+.head p{color:var(--muted);max-width:70ch}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto;margin-bottom:28px}
+.tabs button{font:600 .92rem var(--f-body);color:var(--muted);background:none;border:0;border-bottom:2px solid transparent;padding:12px 14px;cursor:pointer;white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--ink);border-color:var(--pulse)}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+@media (max-width:860px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;min-width:0}
+.kpi.lead{background:var(--deep);color:var(--deep-fg);border-color:var(--deep)}
+.kpi small{display:block;font-size:.8rem;opacity:.75}
+.kpi .v{font-family:var(--f-display);font-weight:800;font-size:clamp(1.6rem,3.2vw,2.2rem);margin-top:6px;font-variant-numeric:tabular-nums}
+.kpi .d{font-size:.78rem;opacity:.75;margin-top:2px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:18px;min-width:0}
+.panel h3{font-size:1.05rem;margin-bottom:4px}
+.panel .sub{color:var(--muted);font-size:.88rem;margin-bottom:16px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid2 > *{min-width:0}
+@media (max-width:860px){.grid2{grid-template-columns:1fr}}
+.heat{overflow-x:auto}
+.heat table{border-collapse:separate;border-spacing:4px;width:100%;min-width:720px;font-size:.85rem}
+.heat th{font-family:var(--f-mono);font-weight:500;font-size:.7rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);text-align:center;padding:6px}
+.heat th:first-child{text-align:left}
+.heat td{padding:11px 6px;border-radius:6px;text-align:center;font-weight:600;font-variant-numeric:tabular-nums}
+.heat td.rowh{text-align:left;font-weight:500;background:none}
+.scale{display:flex;align-items:center;gap:8px;font-size:.8rem;color:var(--muted);margin-top:12px}
+.scale i{display:block;width:140px;height:8px;border-radius:4px;background:linear-gradient(90deg,var(--bad),var(--mid),var(--good))}
+.ins{display:flex;gap:10px;align-items:flex-start;font-size:.93rem;padding-block:6px}
+.ins::before{content:"";flex:none;width:9px;height:9px;margin-top:.5em;border-radius:50%;background:var(--pulse)}
+.ai{background:var(--deep);color:var(--deep-fg);border-radius:14px;padding:22px;margin-bottom:18px}
+.ai p{opacity:.9;max-width:78ch}
+.ai .tag{display:inline-flex;gap:6px;align-items:center;font-family:var(--f-mono);font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;opacity:.7;margin-bottom:10px}
+.theme{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,2fr) auto;gap:14px;align-items:center;padding-block:10px;border-bottom:1px solid var(--line);font-size:.92rem}
+.theme:last-child{border-bottom:0}
+.split{display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--line)}
+.split .neg{background:var(--bad)}.split .pos{background:var(--good)}
+.theme b{font-family:var(--f-mono);font-weight:500;font-size:.8rem;color:var(--muted)}
+.quote{border-left:3px solid var(--line);padding:4px 0 4px 12px;margin-bottom:12px;font-size:.92rem}
+.quote small{display:block;color:var(--muted);font-size:.78rem;margin-top:2px}
+.quote.neg{border-color:var(--bad)}.quote.pos{border-color:var(--good)}
+.board{display:grid;grid-template-columns:repeat(4,minmax(220px,1fr));gap:12px;overflow-x:auto;padding-bottom:6px}
+.col{background:color-mix(in srgb,var(--line) 45%,transparent);border-radius:14px;padding:10px;min-width:0}
+.col h3{font-size:.9rem;display:flex;justify-content:space-between;padding:4px 6px 10px}
+.col h3 span{font-family:var(--f-mono);font-weight:500;color:var(--muted)}
+.card{display:block;width:100%;text-align:left;font:inherit;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:8px;cursor:pointer}
+.card:hover,.card.sel{border-color:var(--ink)}
+.card .id{font-family:var(--f-mono);font-size:.7rem;color:var(--muted)}
+.card b{display:block;font-weight:600;font-size:.9rem;margin:3px 0 8px;line-height:1.35}
+.meta{display:flex;flex-wrap:wrap;gap:6px;font-size:.74rem}
+.meta span{border:1px solid var(--line);border-radius:6px;padding:1px 6px;color:var(--muted)}
+.pr{font-weight:600;border:0!important;color:#fff!important}
+.pr.Alta{background:var(--bad)}.pr.Media{background:var(--mid);color:#2a2105!important}.pr.Baja{background:var(--good)}
+.exp{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:20px}
+@media (max-width:860px){.exp{grid-template-columns:1fr}}
+.fields{display:grid;gap:12px}
+.fields label{display:grid;gap:4px;font-size:.8rem;color:var(--muted)}
+select,textarea{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px;width:100%}
+textarea{min-height:80px;resize:vertical}
+.tl{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+.tl li{display:grid;grid-template-columns:12px minmax(0,1fr);gap:12px;font-size:.9rem}
+.tl li::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--cool);margin-top:.45em}
+.tl small{display:block;color:var(--muted);font-size:.76rem}
+.btn{font:600 .84rem var(--f-body);border-radius:999px;padding:8px 16px;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.btn.pri{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.empty{color:var(--muted);font-size:.92rem;padding:20px;text-align:center;border:1px dashed var(--line);border-radius:14px}
+.mgr{display:flex;flex-wrap:wrap;justify-content:space-between;gap:14px;align-items:center;margin-bottom:18px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:.84rem;background:var(--surface)}
+.chip.warn{border-color:var(--bad);color:var(--bad)}
+.chip.ok{border-color:var(--good);color:var(--good)}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+.tbl table{width:100%;border-collapse:collapse;font-size:.9rem;min-width:760px}
+.tbl th,.tbl td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl th{font-family:var(--f-mono);font-weight:500;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.tbl tr:last-child td{border-bottom:0}
+.tbl select{width:auto;padding:6px 10px}
+.dots{display:flex;gap:3px}
+.dots i{width:8px;height:8px;border-radius:50%;background:var(--line)}
+.dots i.on{background:var(--cool)}
+.late{color:var(--bad);font-weight:600}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:.88rem;z-index:30}
+.foot{padding-block:28px;color:var(--muted);font-size:.82rem;border-top:1px solid var(--line);margin-top:28px}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="top">
+    <a class="back" href="../index.html">← <b>Pulso</b> · Luis Felipe</a>
+    <span class="badge">Demo con datos ficticios</span>
+  </div>
+  <div class="head">
+    <p class="eyebrow">Encuesta de clima · Octubre 2026</p>
+    <h1>Clima laboral</h1>
+    <p>De la encuesta a la acción: mapa de calor por área, comentarios analizados con IA, casos asignados con su expediente y una vista para que cada jefe gestione a su equipo.</p>
+  </div>
+  <div class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" data-tab="res">Resumen</button>
+    <button role="tab" aria-selected="false" data-tab="ia">Análisis con IA</button>
+    <button role="tab" aria-selected="false" data-tab="cas">Casos y expedientes</button>
+    <button role="tab" aria-selected="false" data-tab="eq">Mi equipo</button>
+  </div>
+
+  <div data-panel="res">
+    <div class="kpis" id="kpis"></div>
+    <div class="panel">
+      <h3>Mapa de calor por área</h3>
+      <p class="sub">Porcentaje de respuestas favorables en cada dimensión. Pasa el cursor sobre una celda para ver el cambio contra la encuesta anterior.</p>
+      <div class="heat"><table id="heat"></table></div>
+      <div class="scale"><span>40%</span><i></i><span>85%</span></div>
+    </div>
+    <div class="panel"><h3>Lo más relevante</h3><div id="hl" style="margin-top:8px"></div></div>
+  </div>
+
+  <div data-panel="ia" hidden>
+    <div class="ai">
+      <span class="tag">Resumen generado con IA · 1,284 comentarios</span>
+      <p id="ai-sum"></p>
+    </div>
+    <div class="grid2">
+      <div class="panel"><h3>Temas detectados</h3><p class="sub">Menciones por tema y tono de los comentarios.</p><div id="themes"></div>
+        <div class="scale" style="gap:14px"><span style="display:flex;gap:6px;align-items:center"><i style="width:10px;height:10px;background:var(--bad)"></i>Negativo</span><span style="display:flex;gap:6px;align-items:center"><i style="width:10px;height:10px;background:var(--good)"></i>Positivo</span></div></div>
+      <div class="panel"><h3>Comentarios representativos</h3><p class="sub">Seleccionados por la IA para cada tema. Anónimos.</p><div id="quotes"></div></div>
+    </div>
+    <div class="panel"><h3>Acciones sugeridas</h3><div id="acts" style="margin-top:8px"></div>
+      <div style="margin-top:14px"><button class="btn pri" id="mk-cases">Crear casos a partir de estas acciones</button></div></div>
+  </div>
+
+  <div data-panel="cas" hidden>
+    <div class="board" id="board"></div>
+    <div class="panel" style="margin-top:18px" id="exp"></div>
+  </div>
+
+  <div data-panel="eq" hidden>
+    <div class="mgr">
+      <div><p class="eyebrow">Vista del jefe</p><h2 style="font-size:1.5rem;margin-top:6px">Roberto Díaz · Almacén, turno matutino</h2></div>
+      <div class="chips" id="eq-chips"></div>
+    </div>
+    <div class="tbl"><table>
+      <thead><tr><th>Colaborador</th><th>Rol en el equipo</th><th>Pulso semanal</th><th>Última reunión 1 a 1</th><th>Acción</th></tr></thead>
+      <tbody id="eq-body"></tbody>
+    </table></div>
+    <p class="sub" style="color:var(--muted);font-size:.85rem;margin-top:12px">Cada jefe ve solo a su equipo. RH ve el consolidado de todas las áreas.</p>
+  </div>
+
+  <p class="foot">Pulso · por Luis Felipe. Empresa, personas y comentarios ficticios. En la versión real el análisis de comentarios se hace con un modelo de IA y los datos se protegen con aviso de privacidad y permisos por rol.</p>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const AREAS=["Almacén","Operaciones","Atención a clientes","Ventas","Administración"];
+const DIMS=["Liderazgo","Comunicación","Reconocimiento","Carga de trabajo","Desarrollo","Compensación","Compañerismo"];
+const FAV=[[58,52,44,41,49,46,78],[64,57,50,47,53,48,74],[71,66,61,55,58,52,80],[74,70,66,63,61,59,72],[80,74,69,68,57,63,76]];
+const DELTA=[[-6,-3,-2,-8,1,-1,2],[-2,-4,0,-5,2,0,1],[3,1,4,-2,0,1,3],[2,3,5,1,-1,4,0],[1,2,0,3,-3,2,1]];
+const mix=v=>{const t=Math.max(0,Math.min(1,(v-40)/45));const c=t<.5?['--bad','--mid',t*2]:['--mid','--good',(t-.5)*2];
+  return `background:color-mix(in srgb,var(${c[1]}) ${Math.round(c[2]*100)}%,var(${c[0]}));color:${t>.25&&t<.75?'#2a2105':'#fff'}`};
+const all=FAV.flat(), idx=Math.round(all.reduce((a,b)=>a+b)/all.length);
+
+document.getElementById('kpis').innerHTML=[
+ ['lead','Índice de clima',idx+'%','respuestas favorables, −2 vs abril'],
+ ['','Participación','86%','408 de 475 colaboradores'],
+ ['','eNPS','+12','¿recomendarías trabajar aquí?'],
+ ['','Casos abiertos','<span id="k-open"></span>','derivados de la encuesta']
+].map(k=>`<div class="kpi ${k[0]}"><small>${k[1]}</small><div class="v">${k[2]}</div><div class="d">${k[3]}</div></div>`).join('');
+
+let h='<thead><tr><th>Área</th>'+DIMS.map(d=>`<th>${d}</th>`).join('')+'</tr></thead><tbody>';
+FAV.forEach((r,i)=>{h+=`<tr><td class="rowh">${AREAS[i]}</td>`+r.map((v,j)=>`<td style="${mix(v)}" title="${AREAS[i]} · ${DIMS[j]}: ${v}% (${DELTA[i][j]>0?'+':''}${DELTA[i][j]} pts vs abril)">${v}%</td>`).join('')+'</tr>'});
+document.getElementById('heat').innerHTML=h+'</tbody>';
+document.getElementById('hl').innerHTML=[
+ 'Carga de trabajo y Reconocimiento son las dimensiones más bajas en Almacén y Operaciones.',
+ 'Almacén perdió 8 puntos en Carga de trabajo desde abril, coincide con la temporada alta.',
+ 'Compañerismo es la fortaleza de toda la empresa: arriba de 70% en todas las áreas.',
+ 'Administración tiene buen clima en general, pero Desarrollo bajó 3 puntos.'
+].map(t=>`<div class="ins">${t}</div>`).join('');
+
+/* IA */
+document.getElementById('ai-sum').textContent='El tema dominante es la carga de trabajo en Almacén y Operaciones: los comentarios mencionan turnos extendidos y falta de personal en temporada alta. El segundo tema es la falta de reconocimiento, sobre todo de parte de los jefes directos. Los comentarios positivos destacan el buen trato entre compañeros y la estabilidad del empleo. Se recomienda atender primero la carga de trabajo en Almacén, porque es donde también se concentra la rotación.';
+const TH=[["Carga de trabajo",312,.82],["Reconocimiento",228,.74],["Liderazgo del jefe directo",196,.58],["Sueldo y prestaciones",171,.69],["Compañerismo",164,.12],["Crecimiento",133,.61],["Herramientas y equipo",80,.55]];
+document.getElementById('themes').innerHTML=TH.map(t=>`<div class="theme"><span>${t[0]}</span><div class="split"><div class="neg" style="width:${t[2]*100}%"></div><div class="pos" style="width:${(1-t[2])*100}%"></div></div><b>${t[1]}</b></div>`).join('');
+const QT=[["neg","En temporada alta nos quedamos hasta tres horas más y no siempre se pagan bien.","Carga de trabajo · Almacén"],
+ ["neg","Mi jefe solo habla conmigo cuando algo sale mal.","Reconocimiento · Operaciones"],
+ ["pos","Lo mejor de aquí es el equipo, nos echamos la mano.","Compañerismo · Atención a clientes"],
+ ["neg","No sé qué tengo que hacer para crecer o cambiar de puesto.","Crecimiento · Administración"],
+ ["pos","Valoro que los pagos siempre llegan a tiempo.","Sueldo y prestaciones · Ventas"]];
+document.getElementById('quotes').innerHTML=QT.map(q=>`<div class="quote ${q[0]}">"${q[1]}"<small>${q[2]}</small></div>`).join('');
+const ACTS=["Revisar plantilla y turnos de Almacén antes de la temporada alta","Capacitar a jefes de Operaciones en retroalimentación y reconocimiento","Publicar criterios claros de promoción en Administración"];
+document.getElementById('acts').innerHTML=ACTS.map(a=>`<div class="ins">${a}</div>`).join('');
+
+/* Casos */
+const PEOPLE=["Sin asignar","Laura Méndez · RH","Roberto Díaz · Jefe de Almacén","Mónica Ríos · Jefa de Operaciones","Héctor Luna · Jefe de Ventas","Claudia Vega · Desarrollo organizacional"];
+const STATES=["Nuevo","Asignado","En seguimiento","Cerrado"];
+let cases=[
+ {id:"C-031",t:"Turnos extendidos sin pago correcto de horas extra",a:"Almacén",o:"Encuesta de clima",p:"Alta",s:"En seguimiento",r:2,log:[["Caso creado desde comentarios de la encuesta","2 oct"],["Asignado a Roberto Díaz","3 oct"],["Revisión de nómina con RH: 14 casos con pago incompleto","9 oct"]]},
+ {id:"C-032",t:"Jefe de turno no da retroalimentación al equipo",a:"Operaciones",o:"Encuesta de clima",p:"Alta",s:"Asignado",r:3,log:[["Caso creado desde comentarios de la encuesta","2 oct"],["Asignado a Mónica Ríos","4 oct"]]},
+ {id:"C-033",t:"Solicitud de cambio de turno por cuidado de hijos",a:"Atención a clientes",o:"Reunión 1 a 1",p:"Media",s:"Nuevo",r:0,log:[["Registrado por el jefe directo","15 oct"]]},
+ {id:"C-034",t:"Falta de montacargas en buen estado",a:"Almacén",o:"Buzón",p:"Media",s:"Asignado",r:2,log:[["Recibido en buzón anónimo","11 oct"],["Asignado a Roberto Díaz","12 oct"]]},
+ {id:"C-035",t:"Criterios de promoción poco claros",a:"Administración",o:"Encuesta de clima",p:"Baja",s:"Nuevo",r:0,log:[["Caso creado desde comentarios de la encuesta","2 oct"]]},
+ {id:"C-036",t:"Comentario de trato inadecuado de un supervisor",a:"Ventas",o:"Buzón",p:"Alta",s:"En seguimiento",r:1,log:[["Recibido en buzón anónimo","6 oct"],["Asignado a Laura Méndez","6 oct"],["Entrevistas confidenciales con 4 personas del equipo","13 oct"]]},
+ {id:"C-029",t:"Salida por mejor oferta: revisar tabulador de vendedores",a:"Ventas",o:"Entrevista de salida",p:"Media",s:"Cerrado",r:4,log:[["Registrado en entrevista de salida","18 sep"],["Comparativo de sueldos contra mercado","25 sep"],["Ajuste de comisiones aprobado","30 sep"]]},
+ {id:"C-030",t:"Aire acondicionado del área de llamadas",a:"Atención a clientes",o:"Encuesta de clima",p:"Baja",s:"Cerrado",r:1,log:[["Caso creado","2 oct"],["Reparación realizada","8 oct"]]}];
+let sel="C-031", next=37;
+function renderBoard(){
+  document.getElementById('k-open').textContent=cases.filter(c=>c.s!=="Cerrado").length;
+  document.getElementById('board').innerHTML=STATES.map(s=>{const cs=cases.filter(c=>c.s===s);
+    return `<div class="col"><h3>${s}<span>${cs.length}</span></h3>${cs.map(c=>`<button class="card${c.id===sel?' sel':''}" data-id="${c.id}"><span class="id">${c.id} · ${c.o}</span><b>${c.t}</b><div class="meta"><span class="pr ${c.p}">${c.p}</span><span>${c.a}</span>${c.r?`<span>${PEOPLE[c.r].split(' · ')[0]}</span>`:''}</div></button>`).join('')||'<p class="sub" style="color:var(--muted);font-size:.82rem;padding:6px">Sin casos</p>'}</div>`}).join('');
+  renderExp();
+}
+function renderExp(){
+  const c=cases.find(x=>x.id===sel), el=document.getElementById('exp');
+  if(!c){el.innerHTML='<div class="empty">Elige un caso del tablero para ver su expediente.</div>';return}
+  el.innerHTML=`<p class="eyebrow">Expediente ${c.id}</p><h3 style="font-size:1.3rem;margin:6px 0 4px">${c.t}</h3><p class="sub">${c.a} · Origen: ${c.o}</p>
+   <div class="exp"><div><h3 style="font-size:.95rem;margin-bottom:12px">Historial</h3><ol class="tl">${c.log.map(l=>`<li><div>${l[0]}<small>${l[1]}</small></div></li>`).join('')}</ol>
+     <label style="display:grid;gap:6px;margin-top:18px;font-size:.8rem;color:var(--muted)" for="note">Agregar nota de seguimiento<textarea id="note" placeholder="Ej. Se acordó revisar turnos con el equipo el viernes"></textarea></label>
+     <div style="margin-top:10px"><button class="btn pri" id="add-note">Guardar nota</button></div></div>
+   <div class="fields"><label for="e-st">Estado<select id="e-st">${STATES.map(s=>`<option${s===c.s?' selected':''}>${s}</option>`).join('')}</select></label>
+     <label for="e-r">Responsable<select id="e-r">${PEOPLE.map((p,i)=>`<option value="${i}"${i===c.r?' selected':''}>${p}</option>`).join('')}</select></label>
+     <label for="e-p">Prioridad<select id="e-p">${["Alta","Media","Baja"].map(p=>`<option${p===c.p?' selected':''}>${p}</option>`).join('')}</select></label>
+     <p style="font-size:.82rem;color:var(--muted)">Cada cambio queda registrado en el historial con fecha y responsable.</p></div></div>`;
+  const today="11 nov";
+  document.getElementById('e-st').onchange=e=>{c.s=e.target.value;c.log.push(["Estado cambiado a "+c.s,today]);renderBoard();toast("Estado actualizado")};
+  document.getElementById('e-r').onchange=e=>{c.r=+e.target.value;if(c.r&&c.s==="Nuevo")c.s="Asignado";c.log.push([c.r?"Asignado a "+PEOPLE[c.r].split(' · ')[0]:"Responsable retirado",today]);renderBoard();toast(c.r?"Caso asignado, se notificó al responsable (simulado)":"Responsable retirado")};
+  document.getElementById('e-p').onchange=e=>{c.p=e.target.value;c.log.push(["Prioridad cambiada a "+c.p,today]);renderBoard()};
+  document.getElementById('add-note').onclick=()=>{const n=document.getElementById('note').value.trim();if(!n){toast("Escribe la nota antes de guardar");return}c.log.push([n,today]);renderExp();toast("Nota guardada en el expediente")};
+}
+document.getElementById('board').addEventListener('click',e=>{const b=e.target.closest('.card');if(!b)return;sel=b.dataset.id;renderBoard();document.getElementById('exp').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'})});
+document.getElementById('mk-cases').addEventListener('click',e=>{
+  const ar=["Almacén","Operaciones","Administración"];
+  ACTS.forEach((a,i)=>cases.unshift({id:"C-0"+(next++),t:a,a:ar[i],o:"Análisis con IA",p:i===0?"Alta":"Media",s:"Nuevo",r:0,log:[["Caso creado desde acciones sugeridas por IA","11 nov"]]}));
+  e.target.disabled=true;e.target.textContent="Casos creados";sel=cases[0].id;renderBoard();toast("3 casos nuevos en el tablero");
+});
+renderBoard();
+
+/* Mi equipo */
+const ROLES=["Colaborador","Líder de turno","Capacitador","Embajador de clima","Brigadista"];
+const REQ=["Líder de turno","Capacitador","Embajador de clima","Brigadista"];
+const team=[["Ana Torres",1,4,12],["José Ramírez",0,2,41],["Karla Flores",3,5,8],["Miguel Cruz",4,3,19],["Diego Reyes",0,2,52],["Sofía Jiménez",0,4,15],["Raúl Castillo",0,3,36],["Paola Ruiz",0,4,6],["Iván Morales",0,1,28]].map(t=>({n:t[0],role:t[1],pulse:t[2],days:t[3]}));
+function renderTeam(){
+  const missing=REQ.filter(r=>!team.some(m=>ROLES[m.role]===r)), late=team.filter(m=>m.days>30).length, low=team.filter(m=>m.pulse<=2).length;
+  document.getElementById('eq-chips').innerHTML=`<span class="chip ${late?'warn':'ok'}">${late} sin 1 a 1 en más de 30 días</span><span class="chip ${low?'warn':'ok'}">${low} con pulso bajo</span><span class="chip ${missing.length?'warn':'ok'}">${missing.length?'Falta: '+missing.join(', '):'Roles cubiertos'}</span>`;
+  document.getElementById('eq-body').innerHTML=team.map((m,i)=>`<tr><td>${m.n}</td>
+    <td><select data-i="${i}" aria-label="Rol de ${m.n}">${ROLES.map((r,j)=>`<option value="${j}"${j===m.role?' selected':''}>${r}</option>`).join('')}</select></td>
+    <td><div class="dots" title="${m.pulse} de 5">${[1,2,3,4,5].map(k=>`<i class="${k<=m.pulse?'on':''}"></i>`).join('')}</div></td>
+    <td class="${m.days>30?'late':''}">${m.days===0?'Programada':'Hace '+m.days+' días'}</td>
+    <td>${m.days>30?`<button class="btn" data-sch="${i}">Programar 1 a 1</button>`:'<span style="color:var(--muted);font-size:.85rem">Al día</span>'}</td></tr>`).join('');
+}
+document.getElementById('eq-body').addEventListener('change',e=>{const s=e.target.closest('select[data-i]');if(!s)return;const m=team[+s.dataset.i];m.role=+s.value;renderTeam();toast(`${m.n} ahora es ${ROLES[m.role].toLowerCase()}`)});
+document.getElementById('eq-body').addEventListener('click',e=>{const b=e.target.closest('button[data-sch]');if(!b)return;const m=team[+b.dataset.sch];m.days=0;renderTeam();toast(`1 a 1 con ${m.n} agendada (simulado)`)});
+renderTeam();
+
+document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));
+  document.querySelectorAll('[data-panel]').forEach(p=>p.hidden=p.dataset.panel!==b.dataset.tab)}));
+let tt;function toast(m){const t=document.getElementById('toast');t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,2400)}
+</script>
+</body>
+</html>

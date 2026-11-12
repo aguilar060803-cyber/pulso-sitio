@@ -95,12 +95,14 @@ section{padding-block:72px;border-top:1px solid var(--line)}
 
 .projects{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
 @media (max-width:900px){.projects{grid-template-columns:1fr}}
-.proj{border:1px dashed var(--line);border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:12px;background:transparent}
+.proj{border:1px solid var(--line);border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:12px;background:var(--surface);text-decoration:none;transition:transform .15s ease,border-color .15s ease}
+.proj:hover{transform:translateY(-2px);border-color:var(--ink)}
+.proj .go{margin-top:auto;font-weight:600;font-size:.9rem}
 .proj .thumb{aspect-ratio:16/9;max-width:100%;border-radius:10px;background:var(--surface);border:1px solid var(--line);display:flex;align-items:flex-end;gap:6px;padding:14px}
 .proj .thumb i{flex:1;border-radius:3px 3px 0 0;background:color-mix(in srgb,var(--ok) 70%,transparent)}
 .proj .thumb i.hi{background:var(--pulse)}
 .status{font-family:var(--f-mono);font-size:.72rem;color:var(--muted);display:flex;align-items:center;gap:8px}
-.status::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--pulse);animation:blink 1.6s ease-in-out infinite}
+.status::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--ok);animation:blink 1.6s ease-in-out infinite}
 @keyframes blink{50%{opacity:.3}}
 .proj h3{font-size:1.15rem}
 .proj p{color:var(--muted);font-size:.93rem}
@@ -144,7 +146,7 @@ footer{padding-block:36px;color:var(--muted);font-size:.85rem;display:flex;flex-
     <nav aria-label="Principal">
       <a class="brand" href="#inicio" aria-label="Pulso, inicio">
         <svg viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="8" fill="var(--ink)"/><path d="M4 15h5l2-5 3 10 3-8 2 3h5" fill="none" stroke="var(--pulse)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Pulso
+        <span>Pulso <small style="font:500 .78rem var(--f-body);color:var(--muted)">por Luis Felipe</small></span>
       </a>
       <div class="links">
         <a href="#servicios">Servicios</a><a href="#proyectos">Proyectos</a><a href="#proceso">Proceso</a><a href="#sobre-mi">Sobre mí</a>
@@ -219,28 +221,31 @@ footer{padding-block:36px;color:var(--muted);font-size:.85rem;display:flex;flex-
     <div class="wrap">
       <div class="sec-head">
         <p class="eyebrow">Proyectos</p>
-        <h2>Demos que puedes probar</h2>
-        <p>Construidos con datos ficticios para mostrar cómo se vería con los tuyos.</p>
+        <h2>Demos que puedes probar ahora</h2>
+        <p>Funcionan en el navegador con datos ficticios. Con tus datos quedan listos en semanas.</p>
       </div>
       <div class="projects">
-        <article class="proj">
+        <a class="proj" href="demo/rotacion.html">
           <div class="thumb" aria-hidden="true"><i style="height:40%"></i><i style="height:55%"></i><i class="hi" style="height:85%"></i><i style="height:60%"></i><i style="height:48%"></i><i style="height:70%"></i></div>
-          <span class="status">En construcción</span>
-          <h3><a href="demo/rotacion.html">Tablero de rotación →</a></h3>
-          <p>Quién se va, de qué área, en cuánto tiempo y cuánto le cuesta a la empresa.</p>
-        </article>
-        <article class="proj">
+          <span class="status">Demo en vivo</span>
+          <h3>Rotación y riesgo de salida</h3>
+          <p>Cuánto cuesta la rotación, dónde se concentra y un modelo predictivo que señala quién podría irse y por qué.</p>
+          <span class="go">Ver demo →</span>
+        </a>
+        <a class="proj" href="demo/nom035.html">
           <div class="thumb" aria-hidden="true"><i style="height:30%"></i><i style="height:30%"></i><i style="height:65%"></i><i class="hi" style="height:90%"></i><i style="height:45%"></i><i style="height:35%"></i></div>
-          <span class="status">Próximamente</span>
-          <h3>App NOM-035</h3>
-          <p>Aplica el cuestionario de riesgo psicosocial, calcula resultados y genera el reporte.</p>
-        </article>
-        <article class="proj">
+          <span class="status">Demo en vivo</span>
+          <h3>Evaluación NOM-035</h3>
+          <p>Encuesta interna, calificación según la norma, mapa por área y alertas confidenciales para casos de alto riesgo.</p>
+          <span class="go">Ver demo →</span>
+        </a>
+        <a class="proj" href="demo/clima.html">
           <div class="thumb" aria-hidden="true"><i style="height:75%"></i><i class="hi" style="height:50%"></i><i style="height:62%"></i><i style="height:38%"></i><i style="height:58%"></i><i style="height:44%"></i></div>
-          <span class="status">Próximamente</span>
+          <span class="status">Demo en vivo</span>
           <h3>Clima laboral con IA</h3>
-          <p>Cientos de comentarios abiertos convertidos en temas, tono y acciones concretas.</p>
-        </article>
+          <p>Mapa de calor, comentarios analizados con IA, casos con expediente y una vista para que cada jefe gestione su equipo.</p>
+          <span class="go">Ver demo →</span>
+        </a>
       </div>
     </div>
   </section>
@@ -264,11 +269,11 @@ footer{padding-block:36px;color:var(--muted);font-size:.85rem;display:flex;flex-
     <div class="wrap about">
       <div class="sec-head" style="margin:0">
         <p class="eyebrow">Sobre mí</p>
-        <h2>Hola, soy <span class="placeholder">Luis Felipe</span></h2>
+        <h2>Hola, soy Luis Felipe</h2>
       </div>
       <div>
         <div class="body">
-          <p>Trabajo desarrollando soluciones web y de People Analytics en el área de tecnología de una empresa. Ahí aprendí que las mejores decisiones sobre las personas salen de datos bien entendidos, no de corazonadas.</p>
+          <p>Desarrollo soluciones de People Analytics y aplicaciones web para áreas de Recursos Humanos: tableros, encuestas, modelos predictivos y herramientas internas. Mi experiencia me enseñó que las mejores decisiones sobre las personas salen de datos bien entendidos.</p>
           <p>Ahora llevo esa experiencia a PyMEs que no tienen un equipo de datos ni de desarrollo, usando inteligencia artificial para entregar en semanas lo que antes tomaba meses.</p>
         </div>
         <div class="stack" aria-label="Herramientas">
@@ -287,9 +292,9 @@ footer{padding-block:36px;color:var(--muted);font-size:.85rem;display:flex;flex-
           <p>Escríbeme y en 30 minutos te digo por dónde empezar. Sin costo y sin compromiso.</p>
         </div>
         <div class="channels">
-          <div class="chan"><div><small>WhatsApp</small><b id="c-wa">+52 55 7559 6360</b></div><button class="copy" type="button" data-copy="c-wa">Copiar</button></div>
-          <div class="chan"><div><small>Correo</small><b id="c-mail">aguilar060803@gmail.com</b></div><button class="copy" type="button" data-copy="c-mail">Copiar</button></div>
-          <div class="chan"><div><small>LinkedIn</small><b id="c-li">https://www.linkedin.com/in/luis-felipe-aguilar-trujillo/</b></div><button class="copy" type="button" data-copy="c-li">Copiar</button></div>
+          <div class="chan"><div><small>WhatsApp</small><b id="c-wa">+52 55 0000 0000</b></div><button class="copy" type="button" data-copy="c-wa">Copiar</button></div>
+          <div class="chan"><div><small>Correo</small><b id="c-mail">hola@pulso.mx</b></div><button class="copy" type="button" data-copy="c-mail">Copiar</button></div>
+          <div class="chan"><div><small>LinkedIn</small><b id="c-li">linkedin.com/in/tu-perfil</b></div><button class="copy" type="button" data-copy="c-li">Copiar</button></div>
         </div>
       </div>
     </div>
@@ -298,7 +303,7 @@ footer{padding-block:36px;color:var(--muted);font-size:.85rem;display:flex;flex-
 
 <div class="wrap">
   <footer>
-    <span>© 2026 Pulso · People Analytics para PyMEs</span>
+    <span>© 2026 Pulso · por Luis Felipe</span>
     <span>Tus datos se tratan con confidencialidad. Aviso de privacidad disponible a solicitud.</span>
   </footer>
 </div>

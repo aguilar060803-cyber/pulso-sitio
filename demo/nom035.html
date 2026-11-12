@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pulso NOM-035</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: app de una columna (1120px) con pestañas: Resultados (resumen → categorías → mapa por área), Alertas, Plan de acción, Encuesta */
+:root{
+  --bg:#F4F7F6; --surface:#FFFFFF; --ink:#0D2B2A; --muted:#4E6866; --line:#D6E2DF;
+  --deep:#0D3B38; --deep-fg:#E8F3F1; --pulse:#F2A93B; --pulse-ink:#8A5A0B;
+  --l0:#3E9C74; --l1:#8DBF5A; --l2:#D9B530; --l3:#E07B39; --l4:#C8443A; --on-level:#FFFFFF;
+  --f-display:"Bricolage Grotesque","Avenir Next","Segoe UI",system-ui,sans-serif;
+  --f-body:"Inter","Segoe UI",system-ui,-apple-system,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0A1716; --surface:#10221F; --ink:#E4EFEC; --muted:#93AEA9; --line:#1F3A36;
+  --deep:#13332F; --deep-fg:#E4EFEC; --pulse:#F5B754; --pulse-ink:#F5B754;
+  --l0:#3F9B73; --l1:#7FAE4F; --l2:#C9A52A; --l3:#D57134; --l4:#C24A40; --on-level:#FFFFFF; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0A1716; --surface:#10221F; --ink:#E4EFEC; --muted:#93AEA9; --line:#1F3A36;
+  --deep:#13332F; --deep-fg:#E4EFEC; --pulse:#F5B754; --pulse-ink:#F5B754;
+  --l0:#3F9B73; --l1:#7FAE4F; --l2:#C9A52A; --l3:#D57134; --l4:#C24A40; --on-level:#FFFFFF; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--f-display);margin:0;line-height:1.1;text-wrap:balance}
+p{margin:0}
+:focus-visible{outline:2px solid var(--pulse);outline-offset:2px;border-radius:4px}
+.eyebrow{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding-block:18px;border-bottom:1px solid var(--line)}
+.back{text-decoration:none;color:var(--muted);font-size:.9rem}
+.back b{font-family:var(--f-display);color:var(--ink)}
+.badge{font-family:var(--f-mono);font-size:.72rem;padding:5px 10px;border-radius:999px;background:color-mix(in srgb,var(--pulse) 22%,transparent);color:var(--pulse-ink)}
+.head{padding-block:32px 18px;display:grid;gap:10px}
+.head h1{font-size:clamp(2rem,4.5vw,3rem);font-weight:800}
+.head p{color:var(--muted);max-width:70ch}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto;margin-bottom:28px}
+.tabs button{font:600 .92rem var(--f-body);color:var(--muted);background:none;border:0;border-bottom:2px solid transparent;padding:12px 14px;cursor:pointer;white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--ink);border-color:var(--pulse)}
+.tabs .n{font-family:var(--f-mono);font-size:.72rem;background:var(--l4);color:var(--on-level);border-radius:999px;padding:1px 7px;margin-left:6px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}
+@media (max-width:860px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;min-width:0}
+.kpi.lead{background:var(--deep);color:var(--deep-fg);border-color:var(--deep)}
+.kpi small{display:block;font-size:.8rem;opacity:.75}
+.kpi .v{font-family:var(--f-display);font-weight:800;font-size:clamp(1.6rem,3.2vw,2.2rem);margin-top:6px;font-variant-numeric:tabular-nums}
+.kpi .d{font-size:.78rem;opacity:.75;margin-top:2px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:18px;min-width:0}
+.panel h3{font-size:1.05rem;margin-bottom:4px}
+.panel .sub{color:var(--muted);font-size:.88rem;margin-bottom:16px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid2 > *{min-width:0}
+@media (max-width:860px){.grid2{grid-template-columns:1fr}}
+.lvl{display:inline-block;font-size:.74rem;font-weight:600;padding:3px 9px;border-radius:999px;color:var(--on-level);white-space:nowrap}
+.L0{background:var(--l0)}.L1{background:var(--l1)}.L2{background:var(--l2)}.L3{background:var(--l3)}.L4{background:var(--l4)}
+.stack{display:flex;height:34px;border-radius:8px;overflow:hidden;margin-bottom:12px}
+.stack div{display:flex;align-items:center;justify-content:center;color:var(--on-level);font-size:.78rem;font-weight:600;min-width:0;font-variant-numeric:tabular-nums}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.82rem;color:var(--muted)}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:3px}
+.cat{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,2fr) auto;gap:14px;align-items:center;padding-block:10px;border-bottom:1px solid var(--line)}
+.cat:last-child{border-bottom:0}
+.meter{height:8px;background:var(--line);border-radius:4px;overflow:hidden}
+.meter i{display:block;height:100%;border-radius:4px}
+.cat b{font-family:var(--f-mono);font-weight:500;font-size:.82rem;color:var(--muted);margin-left:6px}
+.heat{overflow-x:auto}
+.heat table{border-collapse:separate;border-spacing:4px;width:100%;min-width:640px;font-size:.85rem}
+.heat th{font-family:var(--f-mono);font-weight:500;font-size:.7rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);text-align:left;padding:6px}
+.heat td{padding:10px 8px;border-radius:6px;text-align:center;color:var(--on-level);font-weight:600;font-variant-numeric:tabular-nums}
+.heat td.rowh{background:none;color:var(--ink);text-align:left;font-weight:500}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+.tbl table{width:100%;border-collapse:collapse;font-size:.9rem;min-width:720px}
+.tbl th,.tbl td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl th{font-family:var(--f-mono);font-weight:500;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.tbl tr:last-child td{border-bottom:0}
+.st{font-size:.8rem;display:inline-flex;align-items:center;gap:6px}
+.st::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.st.p{color:var(--l3)}.st.s{color:var(--l0)}.st.c{color:var(--muted)}
+.btn{font:600 .82rem var(--f-body);border-radius:999px;padding:7px 14px;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.btn.pri{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn:disabled{opacity:.45;cursor:default}
+.filters{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
+select{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px}
+.note{font-size:.84rem;color:var(--muted);margin-top:12px;max-width:80ch}
+.plan{display:grid;gap:12px}
+.plan .item{display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px}
+.plan h3{font-size:1rem;margin-bottom:4px}
+.plan p{color:var(--muted);font-size:.9rem}
+.plan ul{margin:8px 0 0;padding-left:18px;font-size:.9rem}
+.q{padding-block:16px;border-bottom:1px solid var(--line)}
+.q p{font-weight:500;margin-bottom:10px}
+.q p small{display:block;font-family:var(--f-mono);font-weight:400;font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opts label{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:.85rem;cursor:pointer}
+.opts input{accent-color:var(--pulse)}
+.opts label:has(input:checked){border-color:var(--ink);background:color-mix(in srgb,var(--pulse) 15%,transparent)}
+.result{margin-top:20px;background:var(--deep);color:var(--deep-fg);border-radius:14px;padding:20px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:.88rem;z-index:30}
+.foot{padding-block:28px;color:var(--muted);font-size:.82rem;border-top:1px solid var(--line);margin-top:28px}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="top">
+    <a class="back" href="../index.html">← <b>Pulso</b> · Luis Felipe</a>
+    <span class="badge">Demo con datos ficticios</span>
+  </div>
+  <div class="head">
+    <p class="eyebrow">NOM-035-STPS-2018 · Guía de referencia III</p>
+    <h1>Evaluación de riesgo psicosocial</h1>
+    <p>Encuesta interna, calificación automática según la norma, tablero por área y alertas para las personas que requieren atención. Una alternativa a pagar por cada colaborador evaluado con un proveedor externo.</p>
+  </div>
+  <div class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" data-tab="res" id="t-res">Resultados</button>
+    <button role="tab" aria-selected="false" data-tab="ale" id="t-ale">Alertas <span class="n" id="n-ale"></span></button>
+    <button role="tab" aria-selected="false" data-tab="plan" id="t-plan">Plan de acción</button>
+    <button role="tab" aria-selected="false" data-tab="enc" id="t-enc">Así se ve la encuesta</button>
+  </div>
+
+  <div data-panel="res">
+    <div class="kpis" id="kpis"></div>
+    <div class="panel">
+      <h3>Nivel de riesgo de los colaboradores</h3>
+      <p class="sub">Calificación final de cada cuestionario, agrupada en los cinco niveles de la norma.</p>
+      <div class="stack" id="stack"></div>
+      <div class="legend" id="legend"></div>
+    </div>
+    <div class="panel">
+      <h3>Resultados por categoría</h3>
+      <p class="sub">Promedio de la organización y su nivel según los rangos de la Guía III.</p>
+      <div id="cats"></div>
+    </div>
+    <div class="panel">
+      <h3>Mapa de calor por área</h3>
+      <p class="sub">Nivel promedio de cada categoría por área. Las celdas naranjas y rojas requieren acciones.</p>
+      <div class="heat"><table id="heat"></table></div>
+    </div>
+  </div>
+
+  <div data-panel="ale" hidden>
+    <div class="panel" style="background:var(--deep);color:var(--deep-fg);border-color:var(--deep)">
+      <h3>Alertas confidenciales</h3>
+      <p style="opacity:.8;font-size:.9rem;margin-top:4px">Personas con riesgo alto o muy alto, o que reportaron un acontecimiento traumático severo (Guía I). Se identifican por folio; solo el responsable designado ve el nombre.</p>
+    </div>
+    <div class="filters">
+      <select id="f-tipo" aria-label="Tipo de alerta"><option value="">Todas las alertas</option><option value="ats">Acontecimiento traumático</option><option value="L4">Riesgo muy alto</option><option value="L3">Riesgo alto</option></select>
+      <select id="f-est" aria-label="Estado"><option value="">Todos los estados</option><option value="p">Pendiente</option><option value="s">Aviso enviado</option><option value="c">Canalizado</option></select>
+      <span class="note" style="margin:0" id="f-count"></span>
+    </div>
+    <div class="tbl"><table>
+      <thead><tr><th>Folio</th><th>Área</th><th>Motivo</th><th>Calificación</th><th>Estado</th><th>Acción</th></tr></thead>
+      <tbody id="ale-body"></tbody>
+    </table></div>
+    <p class="note">En la versión real, "Enviar aviso" manda un correo al responsable de RH con el folio y los pasos a seguir, y queda registrado para la evidencia ante una inspección de la STPS.</p>
+  </div>
+
+  <div data-panel="plan" hidden>
+    <p class="note" style="margin:0 0 16px">La norma pide acciones cuando una categoría sale en nivel medio o superior. El plan se arma solo a partir de los resultados.</p>
+    <div class="plan" id="plan"></div>
+  </div>
+
+  <div data-panel="enc" hidden>
+    <div class="panel">
+      <h3>Vista del colaborador</h3>
+      <p class="sub">Fragmento de ejemplo con reactivos redactados para el demo. La versión real aplica los 72 reactivos de la Guía III desde el celular, en unos 15 minutos y de forma anónima.</p>
+      <form id="enc"></form>
+      <div style="display:flex;gap:10px;margin-top:18px"><button class="btn pri" type="submit" form="enc">Ver mi resultado</button><button class="btn" type="button" id="enc-reset">Limpiar</button></div>
+      <div class="result" id="enc-res" hidden></div>
+    </div>
+  </div>
+
+  <p class="foot">Pulso · por Luis Felipe. Empresa y resultados ficticios. Rangos de calificación según la Guía de referencia III de la NOM-035-STPS-2018. Esta demo no sustituye la evaluación de un profesional.</p>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+/* Generador con semilla para que el demo siempre muestre lo mismo */
+let seed=35; const rnd=()=>{seed=(seed*16807)%2147483647;return (seed-1)/2147483646};
+const gauss=()=>{let u=0,v=0;while(!u)u=rnd();while(!v)v=rnd();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)};
+const LV=["Nulo","Bajo","Medio","Alto","Muy alto"];
+const CATS=[
+ {k:"amb",n:"Ambiente de trabajo",r:[5,9,11,14],mu:7,max:20},
+ {k:"act",n:"Factores propios de la actividad",r:[15,30,45,60],mu:33,max:108},
+ {k:"tie",n:"Organización del tiempo de trabajo",r:[5,7,10,13],mu:8,max:24},
+ {k:"lid",n:"Liderazgo y relaciones en el trabajo",r:[14,29,42,58],mu:27,max:96},
+ {k:"ent",n:"Entorno organizacional",r:[10,14,18,23],mu:12,max:40}];
+const FINAL=[50,75,99,140];
+const level=(v,r)=>v<r[0]?0:v<r[1]?1:v<r[2]?2:v<r[3]?3:4;
+const AREAS=[["Almacén",124,1.28],["Operaciones",88,1.2],["Atención a clientes",106,1.08],["Ventas",108,1.0],["Administración",49,.82]];
+const people=[]; let f=1;
+AREAS.forEach(([a,n,mod])=>{
+  const resp=Math.round(n*(.88+rnd()*.08));
+  for(let i=0;i<resp;i++){
+    const pf=1+gauss()*.22; const c={};
+    CATS.forEach(k=>{c[k.k]=Math.max(0,Math.min(k.max,Math.round(k.mu*mod*pf*.88*(1+gauss()*.15))))});
+    const tot=CATS.reduce((s,k)=>s+c[k.k],0);
+    people.push({folio:"F-"+String(f++).padStart(4,"0"),area:a,c,tot,lv:level(tot,FINAL),ats:rnd()<.018});
+  }
+});
+const total=AREAS.reduce((s,a)=>s+a[1],0), N=people.length;
+const avg=arr=>arr.reduce((s,x)=>s+x,0)/arr.length;
+const fin=avg(people.map(p=>p.tot)), finL=level(fin,FINAL);
+const counts=[0,0,0,0,0]; people.forEach(p=>counts[p.lv]++);
+const atsN=people.filter(p=>p.ats).length;
+const pill=l=>`<span class="lvl L${l}">${LV[l]}</span>`;
+
+document.getElementById('kpis').innerHTML=[
+ ['lead','Calificación final promedio',fin.toFixed(1),'Nivel '+LV[finL].toLowerCase()+' para la organización'],
+ ['','Participación',Math.round(N/total*100)+'%',N+' de '+total+' colaboradores'],
+ ['','Riesgo alto o muy alto',Math.round((counts[3]+counts[4])/N*100)+'%',(counts[3]+counts[4])+' personas'],
+ ['','Acontecimiento traumático',atsN,'requieren valoración clínica']
+].map(k=>`<div class="kpi ${k[0]}"><small>${k[1]}</small><div class="v">${k[2]}</div><div class="d">${k[3]}</div></div>`).join('');
+
+document.getElementById('stack').innerHTML=counts.map((c,i)=>c?`<div class="L${i}" style="flex:${c}" title="${LV[i]}: ${c}">${c/N>.06?Math.round(c/N*100)+'%':''}</div>`:'').join('');
+document.getElementById('legend').innerHTML=counts.map((c,i)=>`<span><i class="L${i}"></i>${LV[i]} · ${c}</span>`).join('');
+
+const catAvg={}; CATS.forEach(k=>catAvg[k.k]=avg(people.map(p=>p.c[k.k])));
+document.getElementById('cats').innerHTML=CATS.map(k=>{const v=catAvg[k.k],l=level(v,k.r);
+ return `<div class="cat"><div>${k.n}<b>${v.toFixed(1)}</b></div><div class="meter"><i class="L${l}" style="width:${Math.min(100,v/k.r[3]*80)}%"></i></div>${pill(l)}</div>`}).join('');
+
+let h='<thead><tr><th>Área</th>'+CATS.map(k=>`<th>${k.n.replace('Organización del tiempo de trabajo','Tiempo de trabajo').replace('Factores propios de la actividad','Factores de la actividad').replace('Liderazgo y relaciones en el trabajo','Liderazgo y relaciones')}</th>`).join('')+'<th>Final</th></tr></thead><tbody>';
+AREAS.forEach(([a])=>{const ps=people.filter(p=>p.area===a);
+ h+=`<tr><td class="rowh">${a}</td>`+CATS.map(k=>{const v=avg(ps.map(p=>p.c[k.k])),l=level(v,k.r);return `<td class="L${l}" title="${LV[l]}">${v.toFixed(0)}</td>`}).join('');
+ const t=avg(ps.map(p=>p.tot)),l=level(t,FINAL); h+=`<td class="L${l}" title="${LV[l]}">${t.toFixed(0)}</td></tr>`});
+document.getElementById('heat').innerHTML=h+'</tbody>';
+
+/* Alertas */
+const alerts=people.filter(p=>p.ats||p.lv>=3).map((p,i)=>({...p,est:i%5===0?'c':(i%3===0?'s':'p')}));
+const EST={p:'Pendiente',s:'Aviso enviado',c:'Canalizado'};
+const ft=document.getElementById('f-tipo'),fe=document.getElementById('f-est');
+function renderAlerts(){
+  const rows=alerts.filter(a=>(!ft.value||(ft.value==='ats'?a.ats:('L'+a.lv)===ft.value))&&(!fe.value||a.est===fe.value));
+  document.getElementById('n-ale').textContent=alerts.filter(a=>a.est==='p').length;
+  document.getElementById('f-count').textContent=rows.length+' alertas';
+  document.getElementById('ale-body').innerHTML=rows.length?rows.map(a=>`<tr><td><b style="font-family:var(--f-mono);font-weight:500">${a.folio}</b></td><td>${a.area}</td>
+   <td>${a.ats?'Acontecimiento traumático':'Riesgo '+LV[a.lv].toLowerCase()}</td><td>${pill(a.lv)} <span style="font-family:var(--f-mono);font-size:.82rem;color:var(--muted)">${a.tot}</span></td>
+   <td><span class="st ${a.est}">${EST[a.est]}</span></td>
+   <td>${a.est==='p'?`<button class="btn pri" data-f="${a.folio}" data-act="s">Enviar aviso</button>`:a.est==='s'?`<button class="btn" data-f="${a.folio}" data-act="c">Marcar canalizado</button>`:'<span class="note" style="margin:0">Completado</span>'}</td></tr>`).join('')
+   :'<tr><td colspan="6" class="note">No hay alertas con ese filtro.</td></tr>';
+}
+document.getElementById('ale-body').addEventListener('click',e=>{const b=e.target.closest('button[data-f]');if(!b)return;
+  const a=alerts.find(x=>x.folio===b.dataset.f);a.est=b.dataset.act;renderAlerts();
+  toast(a.est==='s'?`Aviso del folio ${a.folio} enviado a RH (simulado)`:`Folio ${a.folio} marcado como canalizado`)});
+ft.addEventListener('change',renderAlerts);fe.addEventListener('change',renderAlerts);renderAlerts();
+
+/* Plan de acción */
+const ACC={
+ amb:["Revisar condiciones de iluminación, ruido y temperatura en las áreas con nivel alto","Programa de orden y seguridad con recorridos mensuales"],
+ act:["Balancear cargas de trabajo y revisar metas por puesto","Dar más control al colaborador sobre cómo organiza sus tareas","Capacitación específica para las tareas más demandantes"],
+ tie:["Limitar horas extra y rotar turnos de forma equitativa","Respetar descansos y horarios de salida"],
+ lid:["Taller de liderazgo para jefes de las áreas con nivel alto","Reuniones uno a uno quincenales con retroalimentación","Canal confidencial para reportar malos tratos"],
+ ent:["Programa de reconocimiento por desempeño","Comunicar planes de crecimiento y criterios de promoción"]};
+const ordered=CATS.map(k=>({k,v:catAvg[k.k],l:level(catAvg[k.k],k.r),hot:AREAS.filter(([a])=>level(avg(people.filter(p=>p.area===a).map(p=>p.c[k.k])),k.r)>=3).map(a=>a[0])})).sort((a,b)=>b.l-a.l||b.hot.length-a.hot.length);
+document.getElementById('plan').innerHTML=ordered.map(o=>`<div class="item"><div>${pill(o.l)}</div><div><h3>${o.k.n}</h3>
+ <p>${o.l>=2?'Requiere acciones.':'Sin acciones obligatorias; dar seguimiento.'}${o.hot.length?' Áreas prioritarias: '+o.hot.join(', ')+'.':''}</p>
+ ${o.l>=2||o.hot.length?'<ul>'+ACC[o.k.k].map(x=>`<li>${x}</li>`).join('')+'</ul>':''}</div></div>`).join('');
+
+/* Encuesta de ejemplo */
+const Q=[
+ ["Ambiente de trabajo","El lugar donde trabajo tiene condiciones incómodas (ruido, calor, poca luz).",1],
+ ["Factores de la actividad","Tengo que trabajar muy rápido para terminar a tiempo.",1],
+ ["Factores de la actividad","Puedo decidir cómo hacer mi trabajo.",0],
+ ["Tiempo de trabajo","Trabajo más horas de las que marca mi jornada.",1],
+ ["Tiempo de trabajo","Mis responsabilidades del trabajo afectan mi vida familiar.",1],
+ ["Liderazgo","Mi jefe me da indicaciones claras.",0],
+ ["Relaciones","Recibo apoyo de mis compañeros cuando lo necesito.",0],
+ ["Relaciones","He recibido burlas, gritos o humillaciones en el trabajo.",1],
+ ["Entorno","Me reconocen cuando hago un buen trabajo.",0],
+ ["Entorno","Siento estabilidad en mi empleo.",0]];
+const OPT=["Siempre","Casi siempre","Algunas veces","Casi nunca","Nunca"];
+const form=document.getElementById('enc');
+form.innerHTML=Q.map((q,i)=>`<fieldset class="q" style="border:0;margin:0;padding-inline:0"><p><small>${q[0]}</small>${i+1}. ${q[1]}</p><div class="opts">${OPT.map((o,j)=>`<label><input type="radio" name="q${i}" value="${j}" id="q${i}o${j}">${o}</label>`).join('')}</div></fieldset>`).join('');
+form.addEventListener('submit',e=>{e.preventDefault();
+  let s=0,n=0; Q.forEach((q,i)=>{const v=form.querySelector(`input[name=q${i}]:checked`);if(v){n++;const j=+v.value;s+=q[2]?4-j:j}});
+  const out=document.getElementById('enc-res');out.hidden=false;
+  if(n<Q.length){out.innerHTML=`<b>Faltan ${Q.length-n} preguntas.</b> Responde todas para calcular tu resultado.`;return}
+  const eq=Math.round(s/(Q.length*4)*288*.62), l=level(eq,FINAL);
+  out.innerHTML=`<p class="eyebrow" style="color:var(--deep-fg);opacity:.6">Resultado orientativo</p><p style="font-family:var(--f-display);font-size:1.6rem;font-weight:800;margin:6px 0">${pill(l)} ${eq} puntos</p><p style="opacity:.8;font-size:.9rem">Escalado a la calificación de la Guía III para el demo. En la versión real se calcula con los 72 reactivos y, si sale alto, se genera una alerta confidencial para RH.</p>`;
+});
+document.getElementById('enc-reset').addEventListener('click',()=>{form.reset();document.getElementById('enc-res').hidden=true});
+
+/* Pestañas y aviso */
+document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));
+  document.querySelectorAll('[data-panel]').forEach(p=>p.hidden=p.dataset.panel!==b.dataset.tab)}));
+let tt;function toast(m){const t=document.getElementById('toast');t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,2400)}
+</script>
+</body>
+</html>
